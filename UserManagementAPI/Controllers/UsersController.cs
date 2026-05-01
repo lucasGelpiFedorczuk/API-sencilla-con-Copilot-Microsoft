@@ -34,6 +34,7 @@ public class UsersController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> Get(Guid id)
     {
+        if (id == Guid.Empty) return BadRequest("Invalid id");
         var user = await _service.GetAsync(id);
         if (user is null) return NotFound();
         var dto = new UserReadDto
@@ -59,7 +60,15 @@ public class UsersController : ControllerBase
             Email = userDto.Email
         };
 
-        var created = await _service.CreateAsync(user);
+        User created;
+        try
+        {
+            created = await _service.CreateAsync(user);
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("Email"))
+        {
+            return Conflict(new { message = ex.Message });
+        }
 
         var readDto = new UserReadDto
         {
@@ -79,6 +88,8 @@ public class UsersController : ControllerBase
         if (!ModelState.IsValid) return BadRequest(ModelState);
         if (id != userDto.Id) return BadRequest();
 
+        if (id == Guid.Empty) return BadRequest("Invalid id");
+
         var user = new User
         {
             Id = userDto.Id,
@@ -87,8 +98,15 @@ public class UsersController : ControllerBase
             Email = userDto.Email
         };
 
-        var ok = await _service.UpdateAsync(user);
-        if (!ok) return NotFound();
+        try
+        {
+            var ok = await _service.UpdateAsync(user);
+            if (!ok) return NotFound();
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("Email"))
+        {
+            return Conflict(new { message = ex.Message });
+        }
         return NoContent();
     }
 

@@ -42,4 +42,15 @@ public class UserRepository : IUserRepository
         _db.Users.Update(user);
         await _db.SaveChangesAsync();
     }
+
+    public async Task<bool> EmailExistsAsync(string email, Guid? excludeUserId = null)
+    {
+        if (string.IsNullOrWhiteSpace(email)) return false;
+        var query = _db.Users.AsQueryable().Where(u => u.Email == email);
+        if (excludeUserId.HasValue)
+        {
+            query = query.Where(u => u.Id != excludeUserId.Value);
+        }
+        return await query.AnyAsync();
+    }
 }
