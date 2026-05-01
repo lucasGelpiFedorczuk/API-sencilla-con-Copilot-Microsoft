@@ -37,8 +37,6 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
-app.UseCors("AllowLocalhost");
 
 // Global error handling middleware (should be early in the pipeline)
 app.UseErrorHandling();
@@ -48,6 +46,9 @@ app.UseTokenAuthentication();
 
 // Request/Response logging
 app.UseRequestResponseLogging();
+
+app.UseHttpsRedirection();
+app.UseCors("AllowLocalhost");
 
 app.MapControllers();
 
