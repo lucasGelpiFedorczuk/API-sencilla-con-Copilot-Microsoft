@@ -118,6 +118,17 @@ Próximos pasos recomendados (opcional)
 - Añadir pruebas unitarias e integración (xUnit + test server)
 - Agregar logging estructurado y manejo de errores global
 
+Validaciones añadidas
+
+- Validación de ID vacía: los endpoints que reciben `id` ahora devuelven `400 Bad Request` si se pasa `Guid.Empty`. Esto evita llamadas inválidas al servicio/repositorio.
+- Prevención de email duplicado: en creación y actualización se comprueba si el email ya está en uso. Si existe un usuario con el mismo email, la API devuelve `409 Conflict` con un cuerpo JSON: `{ "message": "Email already in use" }`.
+
+Notas sobre la validación de email:
+- La verificación se realiza en la capa de servicio usando `IUserRepository.EmailExistsAsync(email, excludeUserId)`.
+- Para producción recomendamos además:
+  - normalizar el email (trim + ToLowerInvariant) antes de persistir y comparar,
+  - añadir un índice único en la columna `Email` a nivel de base de datos para garantizar unicidad.
+
 ---
 
 Si quieres, puedo:
