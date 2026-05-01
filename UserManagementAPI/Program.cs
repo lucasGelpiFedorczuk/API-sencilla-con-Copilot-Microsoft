@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using UserManagementAPI.Data;
 using UserManagementAPI.Repositories;
 using UserManagementAPI.Services;
+using UserManagementAPI.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,6 +39,15 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("AllowLocalhost");
+
+// Global error handling middleware (should be early in the pipeline)
+app.UseErrorHandling();
+
+// Token authentication (validates Authorization: Bearer <token>)
+app.UseTokenAuthentication();
+
+// Request/Response logging
+app.UseRequestResponseLogging();
 
 app.MapControllers();
 
