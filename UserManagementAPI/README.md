@@ -138,3 +138,35 @@ Si quieres, puedo:
 - preparar las migraciones y cambiar la configuración para SQL Server.
 
 Dime cuál sigue y lo implemento.
+
+Middlewares añadidos
+
+1) ErrorHandlingMiddleware
+- Archivo: `Middleware/ErrorHandlingMiddleware.cs`
+- Propósito: captura excepciones no gestionadas y devuelve una respuesta JSON estándar con campos `error` y, en desarrollo, `detail` (stacktrace).
+- Mapeo de códigos HTTP:
+  - `InvalidOperationException` -> 409 Conflict
+  - `ArgumentException` -> 400 Bad Request
+  - `KeyNotFoundException` -> 404 Not Found
+  - cualquier otra excepción -> 500 Internal Server Error
+
+2) TokenAuthenticationMiddleware
+- Archivo: `Middleware/TokenAuthenticationMiddleware.cs`
+- Propósito: valida el header `Authorization: Bearer <token>` contra la configuración `Auth:Token`. Devuelve `401 Unauthorized` con JSON cuando no existe el header, el esquema no es Bearer, o el token es inválido.
+- Configuración (desarrollo): `appsettings.Development.json` contiene `Auth:Token`.
+
+3) RequestResponseLoggingMiddleware
+- Archivo: `Middleware/RequestResponseLoggingMiddleware.cs`
+- Propósito: registra detalles de la solicitud (método, ruta, headers, body) y de la respuesta (status, headers, body). Usa ILogger para emitir logs de nivel Information.
+
+Orden en el pipeline
+- El orden configurado en `Program.cs` es:
+  1. `app.UseErrorHandling()` (captura errores de middlewares posteriores)
+  2. `app.UseTokenAuthentication()` (rechaza requests no autorizadas temprano)
+  3. `app.UseRequestResponseLogging()` (registra requests/responses ya autenticadas)
+  4. `app.UseHttpsRedirection()` / `app.UseCors(...)` / `app.MapControllers()`
+
+Recomendaciones
+- Para producción, usar autenticación robusta (JWT o proveedor de identidad) y no almacenar secretos en `appsettings`.
+- Habilitar/ajustar el nivel de logging por entorno para evitar registrar información sensible en producción.
+
